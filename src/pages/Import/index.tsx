@@ -18,24 +18,56 @@ interface FileProps {
   readableSize: string;
 }
 
+interface Transaction {
+  id: string;
+  title: string;
+  value: number;
+  formattedValue: string;
+  formattedDate: string;
+  type: 'income' | 'outcome';
+  category: { title: string };
+  created_at: Date;
+}
+
 const Import: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // const data = new FormData();
-
-    // TODO
-
+    console.log('enviar');
     try {
-      // await api.post('/transactions/import', data);
+      await Promise.all(
+        uploadedFiles.map(async file => {
+          const formData = new FormData();
+
+          formData.append('file', file.file);
+
+          const { data } = await api.post<Transaction[]>(
+            'transactions/import',
+            formData,
+          );
+
+          return data;
+        }),
+      );
+
+      history.goBack();
     } catch (err) {
       // console.log(err.response.error);
     }
   }
 
   function submitFile(files: File[]): void {
-    // TODO
+    console.log('carregar');
+    const filesUpload = files.map(file => {
+      return {
+        file,
+        name: file.name,
+        readableSize: filesize(file.size),
+      };
+    });
+
+    setUploadedFiles(filesUpload);
   }
 
   return (
